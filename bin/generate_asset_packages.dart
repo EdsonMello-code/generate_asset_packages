@@ -35,8 +35,6 @@ File getTemplateFile(List<String> arguments) {
     throw Exception('O argumento --template é obrigatório');
   }
 
-  print('path: ${path.split('--template=')[1]}');
-
   final templateFile = File('./${path.split('--template=')[1]}');
 
   return templateFile;
@@ -52,13 +50,13 @@ Future<String> getTemaplateContentByAssetType({
     throw Exception('O template está vazio');
   }
 
-  if (!templateContent.contains('image=')) {
+  if (!templateContent.contains('image:')) {
     throw Exception('O template não contém a propriedade [image]');
   }
 
-  final content = templateContent.split('image=')[1];
+  final content = templateContent.split('image:')[1];
 
-  return content;
+  return content.substring(1, content.length - 2).trim();
 }
 
 Future<void> _generatePackageFromAssetsType({
@@ -102,9 +100,18 @@ Future<void> _createAssetWidgetFile({
 }) async {
   final currentWorkDirectory = await Process.run('pwd', []);
 
-  final imageAssetFile = File(
-      '${currentWorkDirectory.stdout.toString().trim()}/image_asset_widget.dart');
+  late final File imageAssetFile;
 
+  final nameOfWidget = imageWidgetStrinfied.split(' ')[1].trim();
+
+  if (imageWidgetStrinfied.contains('ImageAssetsWidget')) {
+    imageAssetFile = File(
+      '${currentWorkDirectory.stdout.toString().trim()}/image_assets_widget.dart',
+    );
+  } else {
+    imageAssetFile = File(
+        '${currentWorkDirectory.stdout.toString().trim()}/${nameOfWidget.toLowerCase()}.dart');
+  }
   await imageAssetFile.writeAsString(imageWidgetStrinfied);
 }
 
@@ -125,24 +132,22 @@ String _generateImageWidgetClassFromAssetsNames(
   List<String> assetsNames, [
   String? template,
 ]) {
-  final nameOfWidget = template?.split(' ')[1];
-  final nameOfWidgetWithFirstLetterUpperCase = nameOfWidget?.replaceFirst(
-      nameOfWidget[0], nameOfWidget[0].toUpperCase());
+  final nameOfWidget = template?.split(' ')[1].trim();
+
+  print('nameOfWidget: $nameOfWidget');
 
   final proprieties = getPropertiesFromString(template ?? '');
   final propertyNames = getPropertyNames(template ?? '');
 
-  print(template);
-
   if (template != null) {
     return template.replaceAll(
       '{{}}',
-      (assetsNames.map((fileName) =>
-          '''factory $nameOfWidgetWithFirstLetterUpperCase.${fileName.split('.').first}({
+      (assetsNames.map(
+          (fileName) => '''factory $nameOfWidget.${fileName.split('.').first}({
     Key? key,
     ${proprieties.map((e) => e.toString().replaceAll(';', ',')).join('\n')}
   }) {
-    return $nameOfWidgetWithFirstLetterUpperCase._(
+    return $nameOfWidget._(
       key: key,
       ${propertyNames.map((e) => e.toString().replaceAll(';', ',')).join('\n').replaceAll(':path', ": '$fileName'").replaceAll(': path', ": '$fileName'")}
 
@@ -162,7 +167,7 @@ class ImageAssetsWidget extends StatelessWidget {
   final double height;
   final BoxFit fit;
 
-  const ImageAssetWidget._({
+  const ImageAssetsWidget._({
     super.key,
     required this.path,
     required this.color,
@@ -171,14 +176,14 @@ class ImageAssetsWidget extends StatelessWidget {
     required this.fit,
   });
 
-  ${(assetsNames.map((fileName) => '''factory ImageAssetWidget.${fileName.split('.').first}({
+  ${(assetsNames.map((fileName) => '''factory ImageAssetsWidget.${fileName.split('.').first}({
     Key? key,
     Color? color,
     double? width,
     double? height,
     BoxFit? fit,
   }) {
-    return ImageAssetWidget._(
+    return ImageAssetsWidget._(
       key: key,
       path: '$fileName',
       color: color ?? Colors.transparent,

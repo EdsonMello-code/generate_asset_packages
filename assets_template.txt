@@ -1,12 +1,13 @@
-image=class Teste extends StatelessWidget {
+image:{
+  class TesteWidget extends StatelessWidget {
   final String teste;
   final String teste1;
   final String path;
 
   const Teste._({super.key,
-    required String teste,
-    required String teste1,
-    required String path,
+    this.teste,
+    this.teste1,
+    this.path,
   });
   
   {{}}
@@ -15,4 +16,5 @@ image=class Teste extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Placeholder();
   }
+}
 }
